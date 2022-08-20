@@ -1,6 +1,6 @@
 <?php
 
-namespace Ddxt\Support\Repository\Cache\Cacheable;
+namespace Ddxt\Support\Repository\Cache;
 
 use Closure;
 
