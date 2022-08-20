@@ -1,0 +1,27 @@
+{
+    "name": "ddxt/support",
+    "description": "Application Support Module",
+    "type": "library",
+    "license": "private",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Tom",
+            "email": "twij@pm.me"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Ddxt\\Support\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ddxt\\Support\\SupportServiceProvider"
+            ]
+        }
+    }
+}
