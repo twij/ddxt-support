@@ -1,10 +1,10 @@
 <?php
 
-namespace Ddxt\Support\RepositoryCache;
+namespace Ddxt\Support\Repository\Cache\Cacheable;
 
 use Closure;
 
-trait RepositoryCache
+trait Cacheable
 {
     /**
      * Define unique cache key prefix
