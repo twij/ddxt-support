@@ -2,7 +2,7 @@
 
 namespace Ddxt\Support\Repository\Contracts;
 
-use Ddxt\Support\Criteria\Criteria;
+use Ddxt\Support\Repository\Criteria\Criteria;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

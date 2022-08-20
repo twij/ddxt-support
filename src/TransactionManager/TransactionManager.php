@@ -2,6 +2,7 @@
 
 namespace Ddxt\Support\TransactionManager;
 
+use Closure;
 use Illuminate\Database\DatabaseManager;
 
 trait TransactionManager
@@ -77,11 +78,11 @@ trait TransactionManager
     /**
      * Wrap transaction
      *
-     * @param  callable  $function  Transaction closure
+     * @param  Closure  $function  Transaction closure
      *
      * @return void
      */
-    public function transaction(callable $function)
+    public function transaction(Closure $function)
     {
         if ($this->isTransactionInitialised()) {
             $this->database_manager->transaction($function);
