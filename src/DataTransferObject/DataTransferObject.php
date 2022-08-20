@@ -48,6 +48,31 @@ class DataTransferObject
     }
 
     /**
+     * Get property
+     *
+     * @param  mixed  $name  Property name
+     * 
+     * @return mixed  Property value 
+     */
+    public function __get($name)
+    {
+        return $this->$name;
+    }
+
+    /**
+     * Set property
+     *
+     * @param  mixed  $name   Property name
+     * @param  mixed  $value  Property value
+     *
+     * @return void
+     */
+    public function __set($name, $value)
+    {
+        $this->$name = $value;
+    }
+
+    /**
      * Append a key/value pair to data set
      *
      * @param string $key   Key name
