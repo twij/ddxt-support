@@ -8,6 +8,40 @@ use Illuminate\Support\Collection;
 interface RepositoryInterface
 {
     /**
+     * Make the model; called by constructor
+     *
+     * @throws  RepositoryException
+     *
+     * @return  Model  Model
+     */
+    public function makeModel(): Model;
+
+    /**
+     * Get the model instance
+     *
+     * @return Model Model
+     *
+     * @throws BindingResolutionException
+     */
+    public function getModel(): Model;
+
+    /**
+     * Eager load relationships
+     *
+     * @param  array  $relations  Relationship names to load
+     *
+     * @return self   Self; chainable
+     */
+    public function with(array $relations = []): self;
+
+    /**
+     * Get first result with criteria/constraints applied
+     *
+     * @return Model Model
+     */
+    public function first(): ?Model;
+
+    /**
      * Get all entries with criteria/constraints applied
      *
      * @param  array            $columns  The columns to return
@@ -49,13 +83,6 @@ interface RepositoryInterface
      * @return Model  Created model
      */
     public function create(array $data): Model;
-
-    /**
-     * Get first result with criteria/constraints applied
-     *
-     * @return Model Model
-     */
-    public function first(): ?Model;
 
     /**
      * Create an entry without saving it
@@ -108,33 +135,6 @@ interface RepositoryInterface
     public function findBy($attribute, $value, array $columns = ['*']): ?Model;
 
     /**
-     * Eager load relationships
-     *
-     * @param  array  $relations  Relationship names to load
-     *
-     * @return self   Self; chainable
-     */
-    public function with(array $relations = []): self;
-
-    /**
-     * Make the model; called by constructor
-     *
-     * @throws  RepositoryException
-     *
-     * @return  Model  Model
-     */
-    public function makeModel(): Model;
-
-    /**
-     * Get the model instance
-     *
-     * @return Model Model
-     *
-     * @throws BindingResolutionException
-     */
-    public function getModel(): Model;
-
-    /**
      * Sum a field
      *
      * @param  string  $field  Field to sum
@@ -149,6 +149,13 @@ interface RepositoryInterface
      * @return int Total rows
      */
     public function count(): int;
+
+    /**
+     * Apply scopes to results if required
+     *
+     * @return self  Self; chainable 
+     */
+    public function applyScope(): self;
 
     /**
      * Reset the criteria/constraint scope
