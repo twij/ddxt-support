@@ -291,7 +291,7 @@ abstract class Repository implements RepositoryInterface
     {
         foreach ($this->scopes as $scope) {
             $function = 'apply' . $scope;
-            if (function_exists($function)) {
+            if (method_exists($this, $function)) {
                 $this->$function();
             }
         }
@@ -309,7 +309,7 @@ abstract class Repository implements RepositoryInterface
     {
         foreach ($this->scopes as $scope) {
             $function = 'reset' . $scope;
-            if (function_exists($function)) {
+            if (method_exists($this, $function)) {
                 $this->$function();
             }
         }
