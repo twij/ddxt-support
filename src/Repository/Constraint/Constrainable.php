@@ -1,6 +1,6 @@
 <?php
 
-namespace Ddxt\Support\Repository\Criteria;
+namespace Ddxt\Support\Repository\Constraint;
 
 use Illuminate\Support\Collection;
 

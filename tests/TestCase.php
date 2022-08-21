@@ -3,6 +3,7 @@
 namespace Ddxt\Support\Tests;
 
 use Ddxt\Support\SupportServiceProvider;
+use Ddxt\Support\Tests\Examples\Repository\RepositoryServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 class TestCase extends OrchestraTestCase
@@ -17,6 +18,7 @@ class TestCase extends OrchestraTestCase
   {
     return [
         SupportServiceProvider::class,
+        RepositoryServiceProvider::class
     ];
   }
 
