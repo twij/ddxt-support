@@ -2,11 +2,7 @@
 
 namespace Ddxt\Support\Repository;
 
-use Ddxt\Support\Repository\Contracts\ConstrainableInterface;
-use Ddxt\Support\Repository\Contracts\CriteriableInterface;
 use Ddxt\Support\Repository\Contracts\RepositoryInterface;
-use Ddxt\Support\Repository\Criteria\Constrainable;
-use Ddxt\Support\Repository\Criteria\Criteriable;
 use Ddxt\Support\Repository\Exceptions\RepositoryException;
 use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Model;
@@ -14,11 +10,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\BindingResolutionException;
 
-abstract class Repository implements RepositoryInterface, CriteriableInterface, ConstrainableInterface
+abstract class Repository implements RepositoryInterface
 {
-    use Criteriable;
-    use Constrainable;
-
     /**
      * Application Container
      */
@@ -38,6 +31,11 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      * Relationships to eager load
      */
     protected array $with = [];
+
+    /**
+     * Available scopes
+     */
+    protected $scopes = ['Criteria', 'Constraints'];
 
     /**
      * Create repository
@@ -64,172 +62,6 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      * @return  string  Model qualified class
      */
     abstract public function model(): string;
-
-    /**
-     * Get all entries with criteria/constraints applied
-     *
-     * @param  array            $columns  The columns to return
-     *
-     * @return Collection|null  Collection of entries
-     */
-    public function all(
-        $columns = array('*')
-    ): ?Collection {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->with($this->with)->get($columns);
-    }
-
-    /** Get entries; Wrapper for all()
-     *
-     * @param  array            $columns  The columns to return
-     *
-     * @return Collection|null  Results
-     */
-    public function get($columns = array('*')): ?Collection
-    {
-        return $this->all($columns);
-    }
-
-    /**
-     * Paginate entries with criteria/constraints applied
-     *
-     * @param int    $perPage  Amount per page
-     * @param array  $columns  Filter columns
-     * @param int    $page     Page number
-     *
-     * @return \Illuminate\Pagination\LengthAwarePaginator|null Paginated entries
-     */
-    public function paginate(
-        int $perPage = 1,
-        array $columns = ['*'],
-        int $page = null
-    ): ?\Illuminate\Pagination\LengthAwarePaginator {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model
-            ->with($this->with)
-            ->paginate($perPage, $columns, 'page', $page);
-    }
-
-    /**
-     * Create an entry
-     *
-     * @param  array  $data  Model data
-     *
-     * @return Model  Created model
-     */
-    public function create(array $data): Model
-    {
-        return $this->model->create($data);
-    }
-
-    /**
-     * Get first result with criteria/constraints applied
-     *
-     * @return Model Model
-     */
-    public function first(): ?Model
-    {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->with($this->with)->first();
-    }
-
-    /**
-     * Create an entry without saving it
-     *
-     * @param  array  $data  Model data
-     *
-     * @return Model  Structured model
-     */
-    public function make(array $data): Model
-    {
-        return $this->model->make($data);
-    }
-
-    /**
-     * Update an entry
-     *
-     * @param  array   $data       Data
-     * @param  int     $id         Entry id
-     * @param  string  $attribute  Attribute that $id refers to
-     *
-     * @return mixed  Updated model
-     */
-    public function update(array $data, int $id, string $attribute = 'id'): ?Model
-    {
-        if ($entry = $this->model->where($attribute, '=', $id)->first()) {
-            if ($entry->update($data)) {
-                return $entry;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Delete an entry
-     *
-     * @param  int   $id  Id to delete
-     *
-     * @return int   Status
-     */
-    public function delete(int $id): int
-    {
-        if ($entry = $this->model->where('id', '=', $id)->first()) {
-            return $entry->delete();
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-     * Find an entry
-     *
-     * @param  int         $id       ID
-     * @param  array       $columns  Column
-     *
-     * @return null|Model  Result
-     */
-    public function find(int $id, array $columns = ['*']): ?Model
-    {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->with($this->with)->find($id, $columns);
-    }
-
-    /**
-     * Find a model by a field
-     *
-     * @param  mixed       $attribute  Field to match value
-     * @param  mixed       $value      Value to match
-     * @param  array       $columns    Columns to select
-     *
-     * @return null|Model  Result
-     */
-    public function findBy($attribute, $value, array $columns = ['*']): ?Model
-    {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->with($this->with)->where(
-            $attribute,
-            '=',
-            $value
-        )->first($columns);
-    }
-
-    /**
-     * Eager load relationships
-     *
-     * @param  array  $relations  Relationship names to load
-     *
-     * @return self   Self; chainable
-     */
-    public function with(array $relations = []): self
-    {
-        $this->with = $relations;
-        return $this;
-    }
 
     /**
      * Make the model; called by constructor
@@ -264,6 +96,171 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
     }
 
     /**
+     * Eager load relationships
+     *
+     * @param  array  $relations  Relationship names to load
+     *
+     * @return self   Self; chainable
+     */
+    public function with(array $relations = []): self
+    {
+        $this->with = $relations;
+        return $this;
+    }
+
+    /**
+     * Get first result with criteria/constraints applied
+     *
+     * @return Model Model
+     */
+    public function first(): ?Model
+    {
+        return $this->applyScope()->model->with($this->with)->first();
+    }
+
+    /**
+     * Get all entries with scope applied
+     *
+     * @param  array            $columns  The columns to return
+     *
+     * @return Collection|null  Collection of entries
+     */
+    public function all(
+        $columns = array('*')
+    ): ?Collection {
+        return $this->applyScope()->model->with($this->with)->get($columns);
+    }
+
+    /** Get entries; Wrapper for all()
+     *
+     * @param  array            $columns  The columns to return
+     *
+     * @return Collection|null  Results
+     */
+    public function get($columns = array('*')): ?Collection
+    {
+        return $this->all($columns);
+    }
+
+    /**
+     * Paginate entries with scope applied
+     *
+     * @param int    $perPage  Amount per page
+     * @param array  $columns  Filter columns
+     * @param int    $page     Page number
+     *
+     * @return \Illuminate\Pagination\LengthAwarePaginator|null Paginated entries
+     */
+    public function paginate(
+        int $perPage = 1,
+        array $columns = ['*'],
+        int $page = null
+    ): ?\Illuminate\Pagination\LengthAwarePaginator {
+        return $this->applyScope()
+            ->model
+            ->with($this->with)
+            ->paginate($perPage, $columns, 'page', $page);
+    }
+
+    /**
+     * Create an entry
+     *
+     * @param  array  $data  Model data
+     *
+     * @return Model  Created model
+     */
+    public function create(array $data): Model
+    {
+        return $this->model->create($data);
+    }
+
+    /**
+     * Create an entry without saving it
+     *
+     * @param  array  $data  Model data
+     *
+     * @return Model  Structured model
+     */
+    public function make(array $data): Model
+    {
+        return $this->model->make($data);
+    }
+
+    /**
+     * Update an entry
+     *
+     * @param  array   $data       Data
+     * @param  int     $id         Entry id
+     * @param  string  $attribute  Attribute that $id refers to
+     *
+     * @return mixed  Updated model
+     */
+    public function update(array $data, int $id, string $attribute = 'id'): ?Model
+    {
+        if ($entry = $this->applyScope()
+            ->model
+            ->where($attribute, '=', $id)->first()) {
+                if ($entry->update($data)) {
+                    return $entry;
+                }
+            }
+        return null;
+    }
+
+    /**
+     * Delete an entry
+     *
+     * @param  int   $id  Id to delete
+     *
+     * @return int   Status
+     */
+    public function delete(int $id): int
+    {
+        if ($entry = $this->model->where('id', '=', $id)->first()) {
+            return $entry->delete();
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Find an entry
+     *
+     * @param  int         $id       ID
+     * @param  array       $columns  Column
+     *
+     * @return null|Model  Result
+     */
+    public function find(int $id, array $columns = ['*']): ?Model
+    {
+        return $this->applyScope()
+            ->model
+            ->with($this->with)
+            ->find($id, $columns);
+    }
+
+    /**
+     * Find a model by a field
+     *
+     * @param  mixed       $attribute  Field to match value
+     * @param  mixed       $value      Value to match
+     * @param  array       $columns    Columns to select
+     *
+     * @return null|Model  Result
+     */
+    public function findBy($attribute, $value, array $columns = ['*']): ?Model
+    {
+        return $this->applyScope()
+            ->model
+            ->with($this->with)
+            ->where(
+                $attribute,
+                '=',
+                $value
+            )->first($columns);
+    }
+
+    /**
      * Sum a field
      *
      * @param  string  $field  Field to sum
@@ -272,9 +269,7 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      */
     public function sum(string $field): float
     {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->sum($field);
+        return $this->applyScope()->model->sum($field);
     }
 
     /**
@@ -284,9 +279,23 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      */
     public function count(): int
     {
-        $this->applyCriteria();
-        $this->applyConstraints();
-        return $this->model->count();
+        return $this->applyScope()->model->count();
+    }
+
+    /**
+     * Apply scopes to results if required
+     *
+     * @return self  Self; chainable 
+     */
+    public function applyScope(): self
+    {
+        foreach ($this->scopes as $scope) {
+            $function = 'apply' . $scope;
+            if (function_exists($function)) {
+                $this->$function();
+            }
+        }
+        return $this;
     }
 
     /**
@@ -298,8 +307,12 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      */
     public function resetScope(bool $reset_model = false): self
     {
-        $this->resetCriteria();
-        $this->resetConstraints();
+        foreach ($this->scopes as $scope) {
+            $function = 'reset' . $scope;
+            if (function_exists($function)) {
+                $this->$function();
+            }
+        }
 
         if ($reset_model) {
             $this->makeModel();
@@ -328,7 +341,7 @@ abstract class Repository implements RepositoryInterface, CriteriableInterface, 
      */
     public function getSQLQuery(bool $get_bindings = true): string
     {
-        $this->applyCriteria();
+        $this->applyScope();
 
         if ($get_bindings) {
             $query = str_replace(

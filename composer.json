@@ -11,10 +11,10 @@
         }
     ],
     "minimum-stability": "stable",
-    "require": {},
     "autoload": {
         "psr-4": {
-            "Ddxt\\Support\\": "src/"
+            "Ddxt\\Support\\": "src/",
+            "Ddxt\\Support\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -23,5 +23,9 @@
                 "Ddxt\\Support\\SupportServiceProvider"
             ]
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^7.6"
     }
 }
